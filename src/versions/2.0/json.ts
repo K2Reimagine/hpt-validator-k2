@@ -382,7 +382,8 @@ const transformPath = (path: string): string => {
 
 export async function validateJson(
   jsonInput: File | NodeJS.ReadableStream,
-  options: JsonValidatorOptions = {}
+  options: JsonValidatorOptions = {},
+  outputFilePath?: string
 ): Promise<ValidationResult> {
   const validator = new Ajv({ allErrors: true, useDefaults: true })
   addFormats(validator)
@@ -400,7 +401,7 @@ export async function validateJson(
     errors: 0,
     warnings: 0,
   }
-  const writeStream = fs.createWriteStream("./data/tesr_test22.json", {
+  const writeStream = fs.createWriteStream(`${outputFilePath}`, {
     encoding: "utf8",
   })
 
