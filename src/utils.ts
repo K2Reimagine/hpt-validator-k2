@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { ValidationError } from "./types"
+
 export function addErrorsToList<T extends { warning?: boolean | undefined }>(
   newErrors: T[],
   errorList: T[],
@@ -30,4 +33,39 @@ export function addErrorsToList<T extends { warning?: boolean | undefined }>(
   }
 
   return counts
+}
+
+export const filterAndAggregateErrors = (errorArray: ValidationError[]) => {
+  if (errorArray && errorArray.length > 0) {
+    const filteredErrors = errorArray?.filter((error: any) => {
+      return !(
+        error.message.includes("must be boolean") ||
+        error.message.includes("must be string") ||
+        error.message.includes("must be number") ||
+        error.message.includes("must be array") ||
+        error.field === "last_updated_on" ||
+        error.message.includes("last_updated_on") ||
+        error.message.includes("must be equal to one of the allowed values")
+      )
+    })
+
+    const errorCounts = filteredErrors.reduce((acc: any, error: any) => {
+      if (error.message.includes("must have required property")) {
+        if (acc[error.message]) {
+          acc[error.message].counting++
+        } else {
+          acc[error.message] = { counting: 1, examplePath: error.path }
+        }
+      }
+      return acc
+    }, {})
+
+    const aggregatedErrors = Object.keys(errorCounts).map((key) => ({
+      message: key,
+      counting: errorCounts[key].counting,
+      examplePath: errorCounts[key].examplePath,
+    }))
+
+    return aggregatedErrors
+  }
 }

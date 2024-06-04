@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import Ajv, { ErrorObject } from "ajv"
 import addFormats from "ajv-formats"
@@ -17,7 +18,7 @@ import {
   STANDARD_CHARGE_METHODOLOGY,
 } from "./types.js"
 import { errorObjectToValidationError, parseJson } from "../common/json.js"
-import { addErrorsToList } from "../../utils.js"
+import { addErrorsToList, filterAndAggregateErrors } from "../../utils.js"
 import fs from "fs"
 import set from "lodash/set.js"
 
@@ -373,6 +374,8 @@ export const JSON_SCHEMA = {
   required: [...METADATA_REQUIRED, "standard_charge_information"],
 }
 
+type ModeTypes = "write" | "aggregate" | "default" | "incorrectKeys"
+
 const transformPath = (path: string): string => {
   const segments = path.split("/").filter(Boolean)
   return segments
@@ -383,7 +386,9 @@ const transformPath = (path: string): string => {
 export async function validateJson(
   jsonInput: File | NodeJS.ReadableStream,
   options: JsonValidatorOptions = {},
-  outputFilePath?: string
+  mode?: ModeTypes,
+  outputFilePath?: string,
+  clarityInfo?: any
 ): Promise<ValidationResult> {
   const validator = new Ajv({ allErrors: true, useDefaults: true })
   addFormats(validator)
@@ -401,22 +406,37 @@ export async function validateJson(
     errors: 0,
     warnings: 0,
   }
-  const writeStream = fs.createWriteStream(`${outputFilePath}`, {
-    encoding: "utf8",
-  })
+
+  let writeStream: any
+
+  if (mode === "write" && outputFilePath) {
+    writeStream = fs.createWriteStream(`${outputFilePath}`, {
+      encoding: "utf8",
+    })
+  }
 
   return new Promise(async (resolve) => {
-    writeStream.write("{" + "\n")
-
+    if (mode === "write" && outputFilePath) {
+      writeStream.write("{" + "\n")
+      writeStream.write(`"clarity_info":${JSON.stringify(clarityInfo)}, \n`)
+    }
     parser.onValue = ({ value, key, stack }) => {
       if (typeof key === "string" && stack.length < 2 && isNaN(Number(key))) {
         metadata[key] = value
-        writeStream.write(`${JSON.stringify(key)}:${JSON.stringify(value)}, `)
+        if (mode === "write" && outputFilePath) {
+          writeStream.write(
+            `${JSON.stringify(key)}:${JSON.stringify(value)}, \n`
+          )
+        }
       } else if (
         (key as any) === "standard_charge_information" ||
         stack.length > 2
       ) {
-        return writeStream.write(`"standard_charge_information: [, `)
+        if (mode === "write" && outputFilePath) {
+          return writeStream.write(`"standard_charge_information: [ `)
+        } else {
+          return
+        }
       } else {
         hasCharges = true
         if (!validator.validate(STANDARD_CHARGE_SCHEMA, value)) {
@@ -428,8 +448,8 @@ export async function validateJson(
             )
             .map((error) => {
               const pathPrefix = stack
-                .filter((se) => se.key)
-                .map((se) => se.key)
+                .filter((se: { key: any }) => se.key)
+                .map((se: { key: any }) => se.key)
                 .join("/")
 
               if (
@@ -444,17 +464,15 @@ export async function validateJson(
                 const path = `${error.path}/${property}`
                 const transformedPath = transformPath(path)
                 set(value as any, `${transformedPath}`, null)
-                //   writeStream.write(`${property}:${null}, `)
               }
               return {
                 ...error,
-                path: `/${pathPrefix}/${key}${error.path}------72`,
+                path: `/${pathPrefix}/${key}${error.path}`,
               }
             })
           addErrorsToList(validationErrors, errors, options.maxErrors, counts)
           valid = counts.errors === 0
         }
-        // writeStream.write(`${JSON.stringify(value)}, `)
         if (options.onValueCallback) {
           options.onValueCallback(value)
         }
@@ -463,7 +481,9 @@ export async function validateJson(
           options.maxErrors > 0 &&
           counts.errors >= options.maxErrors
         ) {
-          writeStream.end()
+          if (mode === "write" && outputFilePath) {
+            writeStream.end()
+          }
           resolve({
             valid: false,
             errors: errors,
@@ -497,9 +517,11 @@ export async function validateJson(
             const property = (error as any).message.match(
               /must have required property '(.*?)'/
             )[1]
-            writeStream.write(`${JSON.stringify(property)}:${null}`)
-            if (index < validationErrors.length - 1) {
-              writeStream.write(", ")
+            if (mode === "write" && outputFilePath) {
+              writeStream.write(`${JSON.stringify(property)}:${null}`)
+              if (index < validationErrors.length - 1) {
+                writeStream.write(", " + "\n")
+              }
             }
           }
         })
@@ -507,19 +529,33 @@ export async function validateJson(
         addErrorsToList(validationErrors, errors, options.maxErrors, counts)
         valid = counts.errors === 0
       }
-      writeStream.write("}" + "\n")
+      if (mode === "write" && outputFilePath) {
+        writeStream.write("\n" + "}" + "\n")
+      }
 
-      writeStream.end()
-      resolve({
-        valid,
-        errors,
-      })
+      if (mode === "write" && outputFilePath) {
+        writeStream.end()
+      }
+      if (mode === "aggregate") {
+        const aggregatedErrors = filterAndAggregateErrors(errors)
+        resolve({
+          valid,
+          errors: aggregatedErrors || ([] as any),
+        })
+      } else {
+        resolve({
+          valid,
+          errors,
+        })
+      }
     }
 
-    parser.onError = (e) => {
+    parser.onError = (e: { message: any }) => {
       parser.onEnd = () => null
       parser.onError = () => null
-      writeStream.end()
+      if (mode === "write" && outputFilePath) {
+        writeStream.end()
+      }
       parser.end()
       resolve({
         valid: false,
