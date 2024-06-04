@@ -841,7 +841,9 @@ export declare const JSON_SCHEMA: {
     };
     required: string[];
 };
-export declare function validateJson(jsonInput: File | NodeJS.ReadableStream, options?: JsonValidatorOptions, outputFilePath?: string): Promise<ValidationResult>;
+type ModeTypes = "write" | "aggregate" | "default" | "incorrectKeys";
+export declare function validateJson(jsonInput: File | NodeJS.ReadableStream, options?: JsonValidatorOptions, mode?: ModeTypes, outputFilePath?: string, clarityInfo?: any): Promise<ValidationResult>;
 export declare const JsonValidatorTwoZero: {
     validateJson: typeof validateJson;
 };
+export {};
