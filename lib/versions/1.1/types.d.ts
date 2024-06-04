@@ -1,0 +1,16 @@
+export declare const BILLING_CODE_TYPES: readonly ["CPT", "HCPCS", "ICD", "MS-DRG", "R-DRG", "S-DRG", "APS-DRG", "AP-DRG", "APR-DRG", "APC", "NDC", "HIPPS", "LOCAL", "EAPG", "CDT", "RC", "CDM"];
+type BillingCodeTypeTuple = typeof BILLING_CODE_TYPES;
+export type BillingCodeType = BillingCodeTypeTuple[number];
+export declare const DRUG_UNITS: string[];
+type DrugUnitTuple = typeof DRUG_UNITS;
+export type DrugUnit = DrugUnitTuple[number];
+export declare const CHARGE_SETTINGS: readonly ["inpatient", "outpatient", "both"];
+type ChargeSettingTuple = typeof CHARGE_SETTINGS;
+export type ChargeSetting = ChargeSettingTuple[number];
+export declare const CHARGE_BILLING_CLASSES: readonly ["professional", "facility"];
+type ChargeBillingClassTuple = typeof CHARGE_BILLING_CLASSES;
+export type ChargeBillingClass = ChargeBillingClassTuple[number];
+export declare const CONTRACTING_METHODS: readonly ["case rate", "fee schedule", "percent of total billed charges", "per diem", "other"];
+type ContractingMethodTuple = typeof CONTRACTING_METHODS;
+export type ContractingMethod = ContractingMethodTuple[number];
+export {};
