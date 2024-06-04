@@ -15,12 +15,13 @@ import { JsonValidatorTwoZero } from "./versions/2.0/json.js"
 export async function validateJson(
   jsonInput: File | NodeJS.ReadableStream,
   version: SchemaVersion,
-  options: JsonValidatorOptions = {}
+  options: JsonValidatorOptions = {},
+  outputFilePath?: string
 ): Promise<ValidationResult> {
   if (version === "v1.1") {
     return JsonValidatorOneOne.validateJson(jsonInput, options)
   } else if (version === "v2.0" || version === "v2.0.0") {
-    return JsonValidatorTwoZero.validateJson(jsonInput, options)
+    return JsonValidatorTwoZero.validateJson(jsonInput, options, outputFilePath)
   }
   return new Promise((resolve) => {
     resolve({
