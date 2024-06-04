@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   ValidationResult,
   SchemaVersion,
@@ -12,16 +13,27 @@ import { JsonValidatorTwoZero } from "./versions/2.0/json.js"
  * @param onValueCallback Callback function to process streamed standard charge items
  * @returns Promise with validation result
  */
+
+export type ModeTypes = "write" | "aggregate" | "default" | "incorrectKeys"
+
 export async function validateJson(
   jsonInput: File | NodeJS.ReadableStream,
   version: SchemaVersion,
   options: JsonValidatorOptions = {},
-  outputFilePath?: string
+  mode?: ModeTypes,
+  outputFilePath?: string,
+  clarityInfo?: any
 ): Promise<ValidationResult> {
   if (version === "v1.1") {
     return JsonValidatorOneOne.validateJson(jsonInput, options)
   } else if (version === "v2.0" || version === "v2.0.0") {
-    return JsonValidatorTwoZero.validateJson(jsonInput, options, outputFilePath)
+    return JsonValidatorTwoZero.validateJson(
+      jsonInput,
+      options,
+      mode,
+      outputFilePath,
+      clarityInfo
+    )
   }
   return new Promise((resolve) => {
     resolve({
