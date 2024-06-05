@@ -5,7 +5,7 @@ import {
   JsonValidatorOptions,
 } from "./types.js"
 import { JsonValidatorOneOne } from "./versions/1.1/json.js"
-import { JsonValidatorTwoZero } from "./versions/2.0/json.js"
+import { JsonValidatorTwoZero, ModeTypes } from "./versions/2.0/json.js"
 
 /**
  *
@@ -13,8 +13,6 @@ import { JsonValidatorTwoZero } from "./versions/2.0/json.js"
  * @param onValueCallback Callback function to process streamed standard charge items
  * @returns Promise with validation result
  */
-
-export type ModeTypes = "write" | "aggregate" | "default" | "incorrectKeys"
 
 export async function validateJson(
   jsonInput: File | NodeJS.ReadableStream,
