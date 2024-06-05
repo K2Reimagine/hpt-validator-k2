@@ -511,34 +511,29 @@ export async function validateJson(
             ? errorObjectToValidationError
             : errorObjectToValidationErrorWithWarnings
         )
-        validationErrors
-          .filter(
-            (err) =>
-              err.message.match(/must have required property '(.*?)'/) &&
-              !err.path &&
-              (err as any)?.message.match(/must have required property '(.*?)'/)
-                .length > 0
-          )
-          .forEach((error, index) => {
-            if (
-              error.message.match(/must have required property '(.*?)'/) &&
-              (error as any).message.match(
-                /must have required property '(.*?)'/
-              ).length > 0 &&
-              !error.path
-            ) {
-              const property = (error as any).message.match(
-                /must have required property '(.*?)'/
-              )[1]
+        const validErrors = validationErrors.filter(
+          (err) =>
+            err.message.match(/must have required property '(.*?)'/) &&
+            !err.path &&
+            (err as any)?.message.match(/must have required property '(.*?)'/)
+              .length > 0
+        )
 
-              if (mode === "FinalizeJson" && outputFilePath) {
-                writeStream.write(`${JSON.stringify(property)}:${null}`)
-                if (index < validationErrors.length - 1) {
-                  writeStream.write(", " + "\n")
-                }
+        validErrors.forEach((error, index) => {
+          const propertyMatch = error.message.match(
+            /must have required property '(.*?)'/
+          )
+          if (propertyMatch && propertyMatch.length > 0 && !error.path) {
+            const property = propertyMatch[1]
+
+            if (mode === "FinalizeJson" && outputFilePath) {
+              writeStream.write(`${JSON.stringify(property)}:${null}`)
+              if (index < validErrors.length - 1) {
+                writeStream.write(", " + "\n")
               }
             }
-          })
+          }
+        })
 
         addErrorsToList(validationErrors, errors, options.maxErrors, counts)
         valid = counts.errors === 0
