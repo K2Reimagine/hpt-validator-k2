@@ -20,7 +20,7 @@ export async function validateJson(
   options: JsonValidatorOptions = {},
   mode?: ModeTypes,
   outputFilePath?: string,
-  clarityInfo?: any
+  clarifyInfo?: any
 ): Promise<ValidationResult> {
   if (version === "v1.1") {
     return JsonValidatorOneOne.validateJson(jsonInput, options)
@@ -30,7 +30,7 @@ export async function validateJson(
       options,
       mode,
       outputFilePath,
-      clarityInfo
+      clarifyInfo
     )
   }
   return new Promise((resolve) => {

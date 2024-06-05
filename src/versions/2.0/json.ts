@@ -3,6 +3,7 @@
 import Ajv, { ErrorObject } from "ajv"
 import addFormats from "ajv-formats"
 import { JSONParser } from "@streamparser/json"
+import { Writable } from "stream"
 
 import {
   JsonValidatorOptions,
@@ -21,6 +22,8 @@ import { errorObjectToValidationError, parseJson } from "../common/json.js"
 import { addErrorsToList, filterAndAggregateErrors } from "../../utils.js"
 import fs from "fs"
 import set from "lodash/set.js"
+
+import oboe from "oboe" // Import the oboe library
 
 const STANDARD_CHARGE_DEFINITIONS = {
   code_information: {
@@ -392,7 +395,7 @@ export async function validateJson(
   options: JsonValidatorOptions = {},
   mode?: ModeTypes,
   outputFilePath?: string,
-  clarityInfo?: any
+  clarifyInfo?: any
 ): Promise<ValidationResult> {
   const validator = new Ajv({ allErrors: true, useDefaults: true })
   addFormats(validator)
@@ -422,15 +425,41 @@ export async function validateJson(
   return new Promise(async (resolve) => {
     if (mode === "FinalizeJson" && outputFilePath) {
       writeStream.write("{" + "\n")
-      writeStream.write(`"clarity_info":${JSON.stringify(clarityInfo)}, \n`)
+      writeStream.write(`"clarity_info":${JSON.stringify(clarifyInfo)}, \n`)
     }
     parser.onValue = ({ value, key, stack }) => {
       if (typeof key === "string" && stack.length < 2 && isNaN(Number(key))) {
         metadata[key] = value
+
         if (mode === "FinalizeJson" && outputFilePath) {
-          writeStream.write(
-            `${JSON.stringify(key)}:${JSON.stringify(value)}, \n`
-          )
+          writeStream.write(`${JSON.stringify(key)}:`)
+          if (typeof value === "object" && !Array.isArray(value) && value) {
+            writeStream.write("{") // Start object
+            const keys = Object.keys(value as any)
+            for (let i = 0; i < keys.length; i++) {
+              const nestedKey = keys[i]
+              const nestedValue = (value as any)[nestedKey]
+              writeStream.write(
+                `${JSON.stringify(nestedKey)}:${JSON.stringify(nestedValue)}`
+              )
+              if (i < keys.length - 1) {
+                writeStream.write(",")
+              }
+            }
+            writeStream.write("}" + "," + "\n") // End object
+          } else if (Array.isArray(value)) {
+            writeStream.write("[") // Start array
+            for (let i = 0; i < value.length; i++) {
+              writeStream.write(JSON.stringify(value[i]))
+              if (i < value.length - 1) {
+                writeStream.write(",")
+              }
+            }
+            writeStream.write("]" + "," + "\n") // End array
+          } else {
+            // For other types (string, number, boolean), just stringify
+            writeStream.write(`${JSON.stringify(value)} , \n`)
+          }
         }
       } else if (
         (key as any) === "standard_charge_information" ||
@@ -571,7 +600,9 @@ export async function validateJson(
         errors: [
           {
             path: "",
-            message: `JSON parsing error: ${e.message}. The validator is unable to review a syntactically invalid JSON file. Please ensure that your file is well-formatted JSON.`,
+            message: `JSON parsing error: ${e.message}.${JSON.stringify(
+              e
+            )}. The validator is unable to review a syntactically invalid JSON file. Please ensure that your file is well-formatted JSON.`,
           },
         ],
       })
@@ -607,7 +638,7 @@ function errorObjectToValidationErrorWithWarnings(
   ) {
     validationError.warning = true
   }
-  // If code type is NDC, then the corresponding drug unit of measure and drug type of measure data elements
+  // If code type is NDC, then the corresponding drug unit of measure and drug type ofLength measure data elements
   // must be encoded. Required beginning 1/1/2025.
   // two validation errors occur for this conditional: one for the "required" keyword, one for the "if" keyword
   else if (
@@ -619,8 +650,7 @@ function errorObjectToValidationErrorWithWarnings(
     error.schemaPath === "#/if" &&
     index > 0 &&
     errors[index - 1].schemaPath === "#/then/required" &&
-    errors[index - 1].params.missingProperty ===
-      "drug_information jkjkjkjkjkjkjkjkkjkj"
+    errors[index - 1].params.missingProperty === "drug_information"
   ) {
     validationError.warning = true
   }
