@@ -23,8 +23,6 @@ import { addErrorsToList, filterAndAggregateErrors } from "../../utils.js"
 import fs from "fs"
 import set from "lodash/set.js"
 
-import oboe from "oboe" // Import the oboe library
-
 const STANDARD_CHARGE_DEFINITIONS = {
   code_information: {
     type: "object",
@@ -425,7 +423,7 @@ export async function validateJson(
   return new Promise(async (resolve) => {
     if (mode === "FinalizeJson" && outputFilePath) {
       writeStream.write("{" + "\n")
-      writeStream.write(`"clarity_info":${JSON.stringify(clarifyInfo)}, \n`)
+      writeStream.write(`"clarify_info":${JSON.stringify(clarifyInfo)}, \n`)
     }
     parser.onValue = ({ value, key, stack }) => {
       if (typeof key === "string" && stack.length < 2 && isNaN(Number(key))) {
