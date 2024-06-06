@@ -432,7 +432,7 @@ export async function validateJson(
         if (mode === "FinalizeJson" && outputFilePath) {
           writeStream.write(`${JSON.stringify(key)}:`)
           if (typeof value === "object" && !Array.isArray(value) && value) {
-            writeStream.write("{") // Start object
+            writeStream.write("{" + "\n") // Start object
             const keys = Object.keys(value as any)
             for (let i = 0; i < keys.length; i++) {
               const nestedKey = keys[i]
@@ -443,15 +443,17 @@ export async function validateJson(
               if (i < keys.length - 1) {
                 writeStream.write(",")
               }
+              writeStream.write("\n")
             }
             writeStream.write("}" + "," + "\n") // End object
           } else if (Array.isArray(value)) {
-            writeStream.write("[") // Start array
+            writeStream.write("[" + "\n") // Start array
             for (let i = 0; i < value.length; i++) {
               writeStream.write(JSON.stringify(value[i]))
               if (i < value.length - 1) {
                 writeStream.write(",")
               }
+              writeStream.write("\n")
             }
             writeStream.write("]" + "," + "\n") // End array
           } else {
