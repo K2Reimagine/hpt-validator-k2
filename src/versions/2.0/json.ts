@@ -27,9 +27,8 @@ const STANDARD_CHARGE_DEFINITIONS = {
   code_information: {
     type: "object",
     properties: {
-      code: { type: "string", minLength: 1 },
+      code: { type: "string", minLength: 0 },
       type: {
-        enum: BILLING_CODE_TYPES,
         type: "string",
       },
     },
@@ -47,13 +46,9 @@ const STANDARD_CHARGE_DEFINITIONS = {
   standard_charges: {
     type: "object",
     properties: {
-      minimum: { type: "number", exclusiveMinimum: 0 },
-      maximum: { type: "number", exclusiveMinimum: 0 },
-      gross_charge: { type: "number", exclusiveMinimum: 0 },
-      discounted_cash: { type: "number", exclusiveMinimum: 0 },
       setting: {
-        enum: CHARGE_SETTINGS,
         type: "string",
+        nullable: true,
       },
       payers_information: {
         type: "array",
@@ -145,15 +140,12 @@ const STANDARD_CHARGE_DEFINITIONS = {
     type: "object",
     properties: {
       payer_name: { type: "string", minLength: 1 },
-      plan_name: { type: "string", minLength: 1 },
+      plan_name: { type: "string", nullable: true },
       additional_payer_notes: { type: "string" },
-      standard_charge_dollar: { type: "number", exclusiveMinimum: 0 },
       standard_charge_algorithm: { type: "string" },
-      standard_charge_percentage: { type: "number", exclusiveMinimum: 0 },
-      estimated_amount: { type: "number", exclusiveMinimum: 0 },
       methodology: {
-        enum: STANDARD_CHARGE_METHODOLOGY,
         type: "string",
+        nullable: true,
       },
     },
     required: ["payer_name", "plan_name", "methodology"],
@@ -244,11 +236,10 @@ export const METADATA_DEFINITIONS = {
     properties: {
       license_number: { type: "string" },
       state: {
-        enum: STATE_CODES,
         type: "string",
+        nullable: true,
       },
     },
-    required: ["state"],
   },
   affirmation: {
     type: "object",
@@ -258,10 +249,11 @@ export const METADATA_DEFINITIONS = {
           "To the best of its knowledge and belief, the hospital has included all applicable standard charge information in accordance with the requirements of 45 CFR 180.50, and the information encoded is true, accurate, and complete as of the date indicated.",
       },
       confirm_affirmation: {
-        type: "boolean",
+        type: ["string", "boolean"],
+        nullable: true,
       },
     },
-    required: ["affirmation", "confirm_affirmation"],
+    required: ["affirmation"],
   },
   modifier_information: {
     type: "object",
@@ -309,23 +301,25 @@ export const METADATA_DEFINITIONS = {
 }
 
 export const METADATA_PROPERTIES = {
-  hospital_name: { type: "string", minLength: 1 },
+  hospital_name: { type: "string", nullable: true },
   last_updated_on: { type: "string", format: "date" },
   license_information: {
     $ref: "#/definitions/license_information",
   },
-  version: { type: "string", minLength: 1 },
+  version: { type: "string", nullable: true },
   hospital_address: {
     type: "array",
-    items: { type: "string" },
-    minItems: 1,
+    items: { type: "string", nullable: true },
+    nullable: true,
   },
   hospital_location: {
     type: "array",
     items: {
       type: "string",
+      nullable: true,
     },
-    minItems: 1,
+    minItems: 0,
+    nullable: true,
   },
   affirmation: {
     $ref: "#/definitions/affirmation",
@@ -395,7 +389,11 @@ export async function validateJson(
   outputFilePath?: string,
   clarifyInfo?: any
 ): Promise<ValidationResult> {
-  const validator = new Ajv({ allErrors: true, useDefaults: true })
+  const validator = new Ajv({
+    allErrors: true,
+    useDefaults: true,
+    allowUnionTypes: true,
+  })
   addFormats(validator)
   const parser = new JSONParser({
     paths: ["$.*", "$.standard_charge_information.*"],
