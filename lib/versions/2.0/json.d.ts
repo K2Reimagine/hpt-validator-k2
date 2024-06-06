@@ -56,7 +56,6 @@ export declare const STANDARD_CHARGE_SCHEMA: {
                     minLength: number;
                 };
                 type: {
-                    enum: readonly ["CPT", "HCPCS", "ICD", "DRG", "MS-DRG", "R-DRG", "S-DRG", "APS-DRG", "AP-DRG", "APR-DRG", "APC", "NDC", "HIPPS", "LOCAL", "EAPG", "CDT", "RC", "CDM", "TRIS-DRG"];
                     type: string;
                 };
             };
@@ -79,25 +78,9 @@ export declare const STANDARD_CHARGE_SCHEMA: {
         standard_charges: {
             type: string;
             properties: {
-                minimum: {
-                    type: string;
-                    exclusiveMinimum: number;
-                };
-                maximum: {
-                    type: string;
-                    exclusiveMinimum: number;
-                };
-                gross_charge: {
-                    type: string;
-                    exclusiveMinimum: number;
-                };
-                discounted_cash: {
-                    type: string;
-                    exclusiveMinimum: number;
-                };
                 setting: {
-                    enum: readonly ["inpatient", "outpatient", "both"];
                     type: string;
+                    nullable: boolean;
                 };
                 payers_information: {
                     type: string;
@@ -206,29 +189,17 @@ export declare const STANDARD_CHARGE_SCHEMA: {
                 };
                 plan_name: {
                     type: string;
-                    minLength: number;
+                    nullable: boolean;
                 };
                 additional_payer_notes: {
                     type: string;
                 };
-                standard_charge_dollar: {
-                    type: string;
-                    exclusiveMinimum: number;
-                };
                 standard_charge_algorithm: {
                     type: string;
                 };
-                standard_charge_percentage: {
-                    type: string;
-                    exclusiveMinimum: number;
-                };
-                estimated_amount: {
-                    type: string;
-                    exclusiveMinimum: number;
-                };
                 methodology: {
-                    enum: readonly ["case rate", "fee schedule", "percent of total billed charges", "per diem", "other"];
                     type: string;
+                    nullable: boolean;
                 };
             };
             required: string[];
@@ -279,11 +250,10 @@ export declare const METADATA_DEFINITIONS: {
                 type: string;
             };
             state: {
-                enum: readonly ["AL", "AK", "AS", "AZ", "AR", "CA", "CO", "CT", "DE", "DC", "FL", "GA", "GU", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "MP", "OH", "OK", "OR", "PA", "PR", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VI", "VA", "WA", "WV", "WI", "WY"];
                 type: string;
+                nullable: boolean;
             };
         };
-        required: string[];
     };
     affirmation: {
         type: string;
@@ -292,7 +262,8 @@ export declare const METADATA_DEFINITIONS: {
                 const: string;
             };
             confirm_affirmation: {
-                type: string;
+                type: string[];
+                nullable: boolean;
             };
         };
         required: string[];
@@ -344,7 +315,7 @@ export declare const METADATA_DEFINITIONS: {
 export declare const METADATA_PROPERTIES: {
     hospital_name: {
         type: string;
-        minLength: number;
+        nullable: boolean;
     };
     last_updated_on: {
         type: string;
@@ -355,21 +326,24 @@ export declare const METADATA_PROPERTIES: {
     };
     version: {
         type: string;
-        minLength: number;
+        nullable: boolean;
     };
     hospital_address: {
         type: string;
         items: {
             type: string;
+            nullable: boolean;
         };
-        minItems: number;
+        nullable: boolean;
     };
     hospital_location: {
         type: string;
         items: {
             type: string;
+            nullable: boolean;
         };
         minItems: number;
+        nullable: boolean;
     };
     affirmation: {
         $ref: string;
@@ -392,11 +366,10 @@ export declare const METADATA_SCHEMA: {
                     type: string;
                 };
                 state: {
-                    enum: readonly ["AL", "AK", "AS", "AZ", "AR", "CA", "CO", "CT", "DE", "DC", "FL", "GA", "GU", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "MP", "OH", "OK", "OR", "PA", "PR", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VI", "VA", "WA", "WV", "WI", "WY"];
                     type: string;
+                    nullable: boolean;
                 };
             };
-            required: string[];
         };
         affirmation: {
             type: string;
@@ -405,7 +378,8 @@ export declare const METADATA_SCHEMA: {
                     const: string;
                 };
                 confirm_affirmation: {
-                    type: string;
+                    type: string[];
+                    nullable: boolean;
                 };
             };
             required: string[];
@@ -458,7 +432,7 @@ export declare const METADATA_SCHEMA: {
     properties: {
         hospital_name: {
             type: string;
-            minLength: number;
+            nullable: boolean;
         };
         last_updated_on: {
             type: string;
@@ -469,21 +443,24 @@ export declare const METADATA_SCHEMA: {
         };
         version: {
             type: string;
-            minLength: number;
+            nullable: boolean;
         };
         hospital_address: {
             type: string;
             items: {
                 type: string;
+                nullable: boolean;
             };
-            minItems: number;
+            nullable: boolean;
         };
         hospital_location: {
             type: string;
             items: {
                 type: string;
+                nullable: boolean;
             };
             minItems: number;
+            nullable: boolean;
         };
         affirmation: {
             $ref: string;
@@ -555,7 +532,6 @@ export declare const JSON_SCHEMA: {
                     minLength: number;
                 };
                 type: {
-                    enum: readonly ["CPT", "HCPCS", "ICD", "DRG", "MS-DRG", "R-DRG", "S-DRG", "APS-DRG", "AP-DRG", "APR-DRG", "APC", "NDC", "HIPPS", "LOCAL", "EAPG", "CDT", "RC", "CDM", "TRIS-DRG"];
                     type: string;
                 };
             };
@@ -578,25 +554,9 @@ export declare const JSON_SCHEMA: {
         standard_charges: {
             type: string;
             properties: {
-                minimum: {
-                    type: string;
-                    exclusiveMinimum: number;
-                };
-                maximum: {
-                    type: string;
-                    exclusiveMinimum: number;
-                };
-                gross_charge: {
-                    type: string;
-                    exclusiveMinimum: number;
-                };
-                discounted_cash: {
-                    type: string;
-                    exclusiveMinimum: number;
-                };
                 setting: {
-                    enum: readonly ["inpatient", "outpatient", "both"];
                     type: string;
+                    nullable: boolean;
                 };
                 payers_information: {
                     type: string;
@@ -659,29 +619,17 @@ export declare const JSON_SCHEMA: {
                 };
                 plan_name: {
                     type: string;
-                    minLength: number;
+                    nullable: boolean;
                 };
                 additional_payer_notes: {
                     type: string;
                 };
-                standard_charge_dollar: {
-                    type: string;
-                    exclusiveMinimum: number;
-                };
                 standard_charge_algorithm: {
                     type: string;
                 };
-                standard_charge_percentage: {
-                    type: string;
-                    exclusiveMinimum: number;
-                };
-                estimated_amount: {
-                    type: string;
-                    exclusiveMinimum: number;
-                };
                 methodology: {
-                    enum: readonly ["case rate", "fee schedule", "percent of total billed charges", "per diem", "other"];
                     type: string;
+                    nullable: boolean;
                 };
             };
             required: string[];
@@ -729,11 +677,10 @@ export declare const JSON_SCHEMA: {
                     type: string;
                 };
                 state: {
-                    enum: readonly ["AL", "AK", "AS", "AZ", "AR", "CA", "CO", "CT", "DE", "DC", "FL", "GA", "GU", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "MP", "OH", "OK", "OR", "PA", "PR", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VI", "VA", "WA", "WV", "WI", "WY"];
                     type: string;
+                    nullable: boolean;
                 };
             };
-            required: string[];
         };
         affirmation: {
             type: string;
@@ -742,7 +689,8 @@ export declare const JSON_SCHEMA: {
                     const: string;
                 };
                 confirm_affirmation: {
-                    type: string;
+                    type: string[];
+                    nullable: boolean;
                 };
             };
             required: string[];
@@ -802,7 +750,7 @@ export declare const JSON_SCHEMA: {
         };
         hospital_name: {
             type: string;
-            minLength: number;
+            nullable: boolean;
         };
         last_updated_on: {
             type: string;
@@ -813,21 +761,24 @@ export declare const JSON_SCHEMA: {
         };
         version: {
             type: string;
-            minLength: number;
+            nullable: boolean;
         };
         hospital_address: {
             type: string;
             items: {
                 type: string;
+                nullable: boolean;
             };
-            minItems: number;
+            nullable: boolean;
         };
         hospital_location: {
             type: string;
             items: {
                 type: string;
+                nullable: boolean;
             };
             minItems: number;
+            nullable: boolean;
         };
         affirmation: {
             $ref: string;
@@ -841,9 +792,8 @@ export declare const JSON_SCHEMA: {
     };
     required: string[];
 };
-type ModeTypes = "write" | "aggregate" | "default" | "incorrectKeys";
-export declare function validateJson(jsonInput: File | NodeJS.ReadableStream, options?: JsonValidatorOptions, mode?: ModeTypes, outputFilePath?: string, clarityInfo?: any): Promise<ValidationResult>;
+export type ModeTypes = "FinalizeJson" | "AggregateErrors" | "Default" | "FindIncorrectKeys";
+export declare function validateJson(jsonInput: File | NodeJS.ReadableStream, options?: JsonValidatorOptions, mode?: ModeTypes, outputFilePath?: string, clarifyInfo?: any): Promise<ValidationResult>;
 export declare const JsonValidatorTwoZero: {
     validateJson: typeof validateJson;
 };
-export {};
