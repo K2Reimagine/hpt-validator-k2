@@ -471,9 +471,10 @@ export async function validateJson(
         if (
           mode === "FindIncorrectKeys" &&
           typeof key === "string" &&
-          !correctJsonKeys.includes(key)
+          !correctJsonKeys.includes(key) &&
+          !extraKeys.some((e) => e.incorrect_attribute_name === key)
         ) {
-          extraKeys.push(key)
+          extraKeys.push({ incorrect_attribute_name: key, sample_path: key })
         }
         if (mode === "FinalizeJson" && outputFilePath) {
           writeStream.write(`${JSON.stringify(key)}:`)
@@ -519,21 +520,32 @@ export async function validateJson(
       } else {
         hasCharges = true
         if (mode === "FindIncorrectKeys") {
-          const findIncorrectKeys = (obj: any) => {
+          const findIncorrectKeys = (
+            obj: any,
+            path: string = "/standard_charge_information"
+          ) => {
             Object.entries(obj).forEach(([key, value]) => {
-              if (!correctJsonKeys.includes(key) && !extraKeys.includes(key)) {
-                extraKeys.push(key)
+              const currentPath = `${path}/${key}`
+
+              if (
+                !correctJsonKeys.includes(key) &&
+                !extraKeys.some((e) => e.incorrect_attribute_name === key)
+              ) {
+                extraKeys.push({
+                  incorrect_attribute_name: key,
+                  sample_path: currentPath,
+                })
               }
 
               if (value && typeof value === "object") {
                 if (Array.isArray(value)) {
-                  value.forEach((item) => {
+                  value.forEach((item, index) => {
                     if (item && typeof item === "object") {
-                      findIncorrectKeys(item)
+                      findIncorrectKeys(item, `${currentPath}/${index}`)
                     }
                   })
                 } else {
-                  findIncorrectKeys(value)
+                  findIncorrectKeys(value, currentPath)
                 }
               }
             })
