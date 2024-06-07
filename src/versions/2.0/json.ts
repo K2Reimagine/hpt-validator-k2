@@ -23,6 +23,47 @@ import { addErrorsToList, filterAndAggregateErrors } from "../../utils.js"
 import fs from "fs"
 import set from "lodash/set.js"
 
+const correctJsonKeys = [
+  "hospital_name",
+  "update_date",
+  "version",
+  "hospital_location",
+  "hospital_address",
+  "license_information",
+  "license_number",
+  "state",
+  "license_information.license_number",
+  "license_information.state",
+  "affirmation",
+  "affirmation.affirmation",
+  "affirmation.confirm_affirmation",
+  "standard_charge_information",
+  "description",
+  "code_information",
+  "drug_information",
+  "standard_charges",
+  "code",
+  "type",
+  "minimum",
+  "maximum",
+  "setting",
+  "payers_information",
+  "payer_name",
+  "plan_name",
+  "standard_charge_dollar",
+  "standard_charge_algorithm",
+  "standard_charge_percentage",
+  "estimated_amount",
+  "methodology",
+  "gross_charge",
+  "discounted_cash",
+  "additional_generic_notes",
+  "last_updated_on",
+  "billing_class",
+  "unit",
+  "confirm_affirmation",
+]
+
 const STANDARD_CHARGE_DEFINITIONS = {
   code_information: {
     type: "object",
@@ -391,7 +432,6 @@ export async function validateJson(
 ): Promise<ValidationResult> {
   const validator = new Ajv({
     allErrors: true,
-    useDefaults: true,
     allowUnionTypes: true,
   })
   addFormats(validator)
@@ -411,6 +451,7 @@ export async function validateJson(
   }
 
   let writeStream: any
+  const extraKeys: any[] = []
 
   if (mode === "FinalizeJson" && outputFilePath) {
     writeStream = fs.createWriteStream(`${outputFilePath}`, {
@@ -423,10 +464,17 @@ export async function validateJson(
       writeStream.write("{" + "\n")
       writeStream.write(`"clarify_info":${JSON.stringify(clarifyInfo)}, \n`)
     }
+
     parser.onValue = ({ value, key, stack }) => {
       if (typeof key === "string" && stack.length < 2 && isNaN(Number(key))) {
         metadata[key] = value
-
+        if (
+          mode === "FindIncorrectKeys" &&
+          typeof key === "string" &&
+          !correctJsonKeys.includes(key)
+        ) {
+          extraKeys.push(key)
+        }
         if (mode === "FinalizeJson" && outputFilePath) {
           writeStream.write(`${JSON.stringify(key)}:`)
           if (typeof value === "object" && !Array.isArray(value) && value) {
@@ -470,6 +518,30 @@ export async function validateJson(
         }
       } else {
         hasCharges = true
+        if (mode === "FindIncorrectKeys") {
+          const findIncorrectKeys = (obj: any) => {
+            Object.entries(obj).forEach(([key, value]) => {
+              if (!correctJsonKeys.includes(key) && !extraKeys.includes(key)) {
+                extraKeys.push(key)
+              }
+
+              if (value && typeof value === "object") {
+                if (Array.isArray(value)) {
+                  value.forEach((item) => {
+                    if (item && typeof item === "object") {
+                      findIncorrectKeys(item)
+                    }
+                  })
+                } else {
+                  findIncorrectKeys(value)
+                }
+              }
+            })
+          }
+
+          findIncorrectKeys(value)
+        }
+
         if (!validator.validate(STANDARD_CHARGE_SCHEMA, value)) {
           const validationErrors = (validator.errors as ErrorObject[])
             .map(
@@ -496,9 +568,11 @@ export async function validateJson(
                 const transformedPath = transformPath(path)
                 set(value as any, `${transformedPath}`, null)
               }
+              const path = `/${pathPrefix}/${key}${error.path}`
+
               return {
                 ...error,
-                path: `/${pathPrefix}/${key}${error.path}`,
+                path,
               }
             })
           addErrorsToList(validationErrors, errors, options.maxErrors, counts)
@@ -577,6 +651,11 @@ export async function validateJson(
         resolve({
           valid,
           errors: aggregatedErrors || ([] as any),
+        })
+      } else if (mode === "FindIncorrectKeys") {
+        resolve({
+          valid,
+          errors: extraKeys,
         })
       } else {
         resolve({
