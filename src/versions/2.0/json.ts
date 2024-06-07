@@ -519,12 +519,17 @@ export async function validateJson(
         }
       } else {
         hasCharges = true
-        if (mode === "FindIncorrectKeys") {
+        if (
+          mode === "FindIncorrectKeys" &&
+          value &&
+          value !== undefined &&
+          typeof value === "object"
+        ) {
           const findIncorrectKeys = (
             obj: any,
             path: string = "/standard_charge_information"
           ) => {
-            Object.entries(obj).forEach(([key, value]) => {
+            Object.entries(obj)?.forEach(([key, value]) => {
               const currentPath = `${path}/${key}`
 
               if (
