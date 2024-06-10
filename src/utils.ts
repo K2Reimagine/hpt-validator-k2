@@ -7,6 +7,7 @@ export function addErrorsToList<T extends { warning?: boolean | undefined }>(
   maxErrors = 0,
   counts: { errors: number; warnings: number }
 ) {
+  console.log(counts, "counts")
   // if warning list is already full, don't add the new warnings
   if (maxErrors > 0 && counts.warnings >= maxErrors) {
     newErrors = newErrors.filter((error) => error.warning !== true)

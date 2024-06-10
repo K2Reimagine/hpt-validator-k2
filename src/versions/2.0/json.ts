@@ -603,6 +603,7 @@ export async function validateJson(
           options.maxErrors > 0 &&
           counts.errors >= options.maxErrors
         ) {
+          console.log("max errors", options)
           if (mode === "FinalizeJson" && outputFilePath) {
             writeStream.end()
           }
